@@ -7,8 +7,8 @@ library(boot);
 set.seed(105);
 isMissing <- TRUE;
 isVarying <- TRUE;
-gamma1<-1;cluster<-100;unit<-50;
-gamma0<-0.7;beta0<-0.25;beta1<-0.5;
+gamma1<-1;cluster<-200;unit<-10;
+gamma0<-1.0;beta0<-0.25;beta1<-0.5;
 sigma.a<-1;sigma.e<-1;true<-0;M<-1000;
 len<-4;res1=res2=res3=res4=matrix(0,nrow=M,ncol=5)
 count.res1=count.res2=count.res3=matrix(0,nrow=M,ncol=4)
@@ -83,7 +83,7 @@ make_data_matrix <- function(cluster,unit){
   a = matrix(rep(rnorm(cluster, mean=0, sd=sigma.a),each = unit), nrow=unit, ncol=cluster)
 
   if( isMissing ){ #True value for missing data analysis
-  	proba = inv.logit(gamma0 + 0.9*a + gamma1*X); #logit probability
+  	proba = inv.logit(gamma0 + 0.6*a + gamma1*X); #logit probability
   	while(TRUE){
   		delta = matrix(rbinom(n=cluster*unit, size=1, prob = proba), nrow=unit, ncol=cluster)
   		if( (sum(colMeans(delta)==0)==0) ){
@@ -213,20 +213,28 @@ for(k in 1:M){
   # generating data
   #-----------------------------------------------------------------------
   
+  isPASS<-TRUE
+  while(isPASS){
+  isPASS<-FALSE
   raw = make_data_matrix(cluster,unit);
   raw_matrix<-sapply(raw,c);    
   if( isVarying ){
-    units<-rbinom(cluster, unit, 0.8) #subset of raw matrix
+    units<-rbinom(cluster, unit, 0.9) #subset of raw matrix
     subset_index<-c();
     for(j in 1:cluster){
       cluster_index = ((j-1)*unit+1):((j-1)*unit+units[j])
       subset_index <- c(subset_index, cluster_index)
+	if( sum(raw_matrix[cluster_index,3]) == 0 ){
+		isPASS<-TRUE
+		break;
+	}
     }
     raw_matrix<-raw_matrix[subset_index,]
   }else{
     units<-rep(unit, cluster) #subset of raw matrix
   }
   long_cluster<-make_long_cluster(units)
+  }
 
   #X=Y=delta=a=NULL;	
   X=raw_X=raw_matrix[,1]; Y=raw_Y=raw_matrix[,2];
@@ -326,3 +334,18 @@ var(res3[,1:4])/T[1:4,1:4] #Check the ratio between simulation variance and esti
 print('mar')
 #filename = paste(Sys.time(),"_CSNI",".RData", sep="")
 #save.image(file = filename)
+
+
+
+library("xtable")
+Bias = rbind(res.cal(res1)[1,],res.cal(res2)[1,],res.cal(res3)[1,])*1000
+Variance = rbind(res.cal(res1)[2,],res.cal(res2)[2,],res.cal(res3)[2,])*1000
+CP = rbind(colMeans(count.res1),colMeans(count.res2),colMeans(count.res3))*1000
+
+DF<-data.frame(t(Bias),t(Variance),t(CP))
+colnames(DF) =c("FULL","COMP","PROP","FULL","COMP","PROP","FULL","COMP","PROP") 
+xtable(DF, digits=c(rep(1,7),rep(0,3)), display=c(rep("f",7),rep("f",3)), align=rep("c",10))
+
+cluster;unit;isVarying
+
+
