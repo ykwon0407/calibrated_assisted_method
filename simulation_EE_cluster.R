@@ -7,7 +7,7 @@ library(boot);
 set.seed(105);
 isMissing <- TRUE;
 isVarying <- TRUE;
-gamma1<-1;cluster<-200;unit<-10;
+gamma1<-1;cluster<-200;unit<-20;
 gamma0<-1.0;beta0<-0.25;beta1<-0.5;
 sigma.a<-1;sigma.e<-1;true<-0;M<-1000;
 len<-4;res1=res2=res3=res4=matrix(0,nrow=M,ncol=5)
@@ -257,6 +257,7 @@ for(k in 1:M){
         long_cluster<-long_cluster[-del_full_cluster]
       }else{
         full_cluster<-0;
+	  full_index<-(cluster+1);
       }
     	Obs = unObs_X = item = Obs_X = rep(0,length(X)); alpha= NULL;
     	for( i in 1:(cluster-full_cluster) ){
