@@ -6,15 +6,22 @@ library(lme4);
 
 set.seed(105);
 isMissing <- TRUE;
-isVarying <- FALSE; #scenario2
-isNormal <- TRUE; #scenario3
+isVarying <- FALSE; #scenario2 if TRUE scenario 1 if FALSE
+isNormal <- TRUE; #scenario3 if FALSE
+isCloglog <- TRUE;
 gamma1<-1;cluster<-400;unit<-20;
-gamma0<-1.0;beta0<-0.25;beta1<-0.5;
-if( isNormal){
+beta0<-0.25;beta1<-0.5;
+if(isCloglog){
+  gamma0<-0.4;
+}else{
+  gamma0<-1.0;    
+}
+if(isNormal){
   sigma.a<-1;
 }else{
   sigma.a<-15/13;
 }
+
 sigma.e<-1;true<-0;M<-1000;
 len<-4;res1=res2=res3=res4=matrix(0,nrow=M,ncol=5)
 count.res1=count.res2=count.res3=count.res4=matrix(0,nrow=M,ncol=4)
@@ -93,7 +100,12 @@ make_data_matrix <- function(cluster,unit){
   }
 
   if( isMissing ){ #True value for missing data analysis
-  	proba = inv.logit(gamma0+0.6*a+gamma1*X); #logit probability
+    if( isCloglog ){
+      proba = 1-exp(-exp(gamma0+0.6*a+gamma1*X)); #cloglog
+    }else{
+      proba = inv.logit(gamma0+0.6*a+gamma1*X); #logit probability
+    }
+  	
   	while(TRUE){
   		delta = matrix(rbinom(n=cluster*unit, size=1, prob = proba), nrow=unit, ncol=cluster)
   		if( (sum(colMeans(delta)==0)==0) ){
