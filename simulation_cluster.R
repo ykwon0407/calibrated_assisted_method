@@ -4,7 +4,7 @@ library(lme4);
 # Default setting
 #----------------------------------------------------------------------------------------
 
-isCloglog<-TRUE;scenario="3";cluster<-400;unit<-20;
+isCloglog<-FALSE;scenario="3";cluster<-1000;unit<-10;
 
 set.seed(105);
 switch(scenario, 
@@ -22,9 +22,9 @@ isMissing <- TRUE;isVarying <- TRUE;isNormal <- FALSE;
 })
 gamma1<-1;beta0<-0.25;beta1<-0.5;
 ifelse(isCloglog, gamma0<-0.4, gamma0<-1.0)
-ifelse(isNormal, sigma.a<-1, sigma.a<-(15/13))
+#ifelse(isNormal, sigma.a<-1, sigma.a<-(15/13))
 
-sigma.e<-1;true<-0;M<-1000;
+sigma.a<-;sigma.e<-1;true<-0;M<-1000;
 len<-4;res1=res2=res3=res4=matrix(0,nrow=M,ncol=5)
 count.res1=count.res2=count.res3=count.res4=matrix(0,nrow=M,ncol=4)
 var.res3=var.res4=matrix(0, nrow=M, ncol=len^2)
@@ -95,10 +95,11 @@ get_gamma <- function(){
 
 make_data_matrix <- function(cluster,unit){
   X = matrix(runif(cluster*unit, min=-1/2,max=1/2), nrow=unit, ncol=cluster)
-  if( isNormal){
+  if(isNormal){
     a = matrix(rep(rnorm(cluster, mean=0, sd=sigma.a),each = unit), nrow=unit, ncol=cluster)
   }else{
-    a = matrix(rep(rt(cluster, df=15), each = unit), nrow=unit, ncol=cluster)
+    #a = matrix(rep(rt(cluster, df=15), each = unit), nrow=unit, ncol=cluster)
+    a = matrix(rep((rexp(cluster, rate=1)-1), each = unit), nrow=unit, ncol=cluster)
   }
 
   if( isMissing ){ #True value for missing data analysis
