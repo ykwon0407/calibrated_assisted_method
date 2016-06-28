@@ -4,7 +4,7 @@ library(lme4);
 # Default setting
 #----------------------------------------------------------------------------------------
 
-isCloglog<-TRUE;scenario="2";cluster<-400;unit<-10;
+isCloglog<-TRUE;scenario="3";cluster<-400;unit<-20;
 
 set.seed(105);
 switch(scenario, 
@@ -459,5 +459,4 @@ DF<-data.frame(t(Bias),t(Variance),t(CP))
 colnames(DF) =c("FULL","COMP","PROP_EE","PROP_EM","FULL","COMP","PROP_EE","PROP_EM","FULL","COMP","PROP_EE","PROP_EM") 
 xtable(DF, digits=c(rep(1,9),rep(0,4)), display=c(rep("f",9),rep("f",4)), align=rep("c",13))
 
-cluster;unit;isVarying;isNormal;isMissing
-
+cluster;unit;isVarying;isNormal;isMissing;scenario;colMeans(res3)[5]
