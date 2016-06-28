@@ -4,23 +4,25 @@ library(lme4);
 # Default setting
 #----------------------------------------------------------------------------------------
 
+isCloglog<-TRUE;scenario="2";cluster<-400;unit<-10;
+
 set.seed(105);
-isMissing <- TRUE;
-isVarying <- FALSE; #scenario2 if TRUE scenario 1 if FALSE
-isNormal <- TRUE; #scenario3 if FALSE
-isCloglog <- TRUE;
-gamma1<-1;cluster<-400;unit<-20;
-beta0<-0.25;beta1<-0.5;
-if(isCloglog){
-  gamma0<-0.4;
-}else{
-  gamma0<-1.0;    
-}
-if(isNormal){
-  sigma.a<-1;
-}else{
-  sigma.a<-15/13;
-}
+switch(scenario, 
+"1"={
+isMissing <- TRUE;isVarying <- FALSE;isNormal <- TRUE;
+},
+"2"={
+isMissing <- TRUE;isVarying <- TRUE;isNormal <- TRUE; 
+},
+"3"={
+isMissing <- TRUE;isVarying <- TRUE;isNormal <- FALSE;   
+},
+{
+   print('default')
+})
+gamma1<-1;beta0<-0.25;beta1<-0.5;
+ifelse(isCloglog, gamma0<-0.4, gamma0<-1.0)
+ifelse(isNormal, sigma.a<-1, sigma.a<-(15/13))
 
 sigma.e<-1;true<-0;M<-1000;
 len<-4;res1=res2=res3=res4=matrix(0,nrow=M,ncol=5)
@@ -366,7 +368,6 @@ for(k in 1:M){
     		unObs_X[this_index]<-rep(sum((1-delta_i)*X_i)/sum(1-delta_i), each=length(this_index));
     		Obs_X[this_index]<-rep(sum(delta_i*X_i)/sum(delta_i), each=length(this_index));
     	}
-    	#item = X-Obs_X;
       est_pi = rep(0,length(X));
       fit_gamma = get_gamma()
       est_pi = fit_gamma[1:(length(fit_gamma)-1)]
@@ -383,11 +384,13 @@ for(k in 1:M){
   X=raw_X; a=raw_a; delta=raw_delta; Y=raw_Y; WEIGHT=raw_delta/proba;
   X.obs=X[delta==1]; a.obs=a[delta==1]; delta.obs=delta[delta==1]; Y.obs=Y[delta==1];
   
+  lmer_fit<-lmer(Y.obs ~ X.obs + (1|a.obs))
+  init_old<-c(fixef(lmer_fit), unclass(as.data.frame(VarCorr(lmer_fit)))$vcov) 
   #-----------------------------------------------------------------------
   # full cases
   #-----------------------------------------------------------------------
   
-  fit.full = get_proposed(X = raw_X, Y=raw_Y, a=raw_a, WEIGHT = rep(1, length(raw_Y)), old = true_parameter)
+  fit.full = get_proposed_EE(X = raw_X, Y=raw_Y, a=raw_a, WEIGHT = rep(1, length(raw_Y)), old = init_old)
   est1 = fit.full[[1]]
   vari1 = sqrt(diag(fit.full[[2]]))
   
@@ -395,7 +398,7 @@ for(k in 1:M){
   # complete cases
   #-----------------------------------------------------------------------
   
-  fit.complete = get_proposed(X = X.obs, Y=Y.obs, a=a.obs, WEIGHT = rep(1, length(Y.obs)), old = true_parameter)
+  fit.complete = get_proposed_EE(X = X.obs, Y=Y.obs, a=a.obs, WEIGHT = rep(1, length(Y.obs)), old = init_old)
   est2 = fit.complete[[1]]
   vari2 = sqrt(diag(fit.complete[[2]]))
   
@@ -403,7 +406,7 @@ for(k in 1:M){
   # proposed cases
   #-----------------------------------------------------------------------
   
-  fit.proposed = get_proposed_EE(X=X, Y=Y, a=a, WEIGHT=WEIGHT, old = est2)
+  fit.proposed = get_proposed_EE(X=X, Y=Y, a=a, WEIGHT=WEIGHT, old = init_old)
   est3 = fit.proposed[[1]]
   vari3 = sqrt(diag(fit.proposed[[2]]))
 
@@ -411,7 +414,7 @@ for(k in 1:M){
   # proposed cases
   #-----------------------------------------------------------------------
   
-  fit.proposed_EM = get_proposed_EM(X=X, Y=Y, a=a, WEIGHT=WEIGHT, old = est2)
+  fit.proposed_EM = get_proposed_EM(X=X, Y=Y, a=a, WEIGHT=WEIGHT, old = init_old)
   est4 = fit.proposed_EM[[1]]
   vari4 = sqrt(diag(fit.proposed_EM[[2]]))
 
@@ -456,6 +459,5 @@ DF<-data.frame(t(Bias),t(Variance),t(CP))
 colnames(DF) =c("FULL","COMP","PROP_EE","PROP_EM","FULL","COMP","PROP_EE","PROP_EM","FULL","COMP","PROP_EE","PROP_EM") 
 xtable(DF, digits=c(rep(1,9),rep(0,4)), display=c(rep("f",9),rep("f",4)), align=rep("c",13))
 
-cluster;unit;isVarying
-
+cluster;unit;isVarying;isNormal;isMissing
 
