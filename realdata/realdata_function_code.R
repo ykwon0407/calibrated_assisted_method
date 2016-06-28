@@ -87,7 +87,7 @@ get_proposed_EE <- function(X=raw.X, Y=raw.Y, a=raw.a, WEIGHT=rep(1,length(raw.Y
     new = old - solve(I)%*%colSums(U);
     error=sum((new-old)^2); old=new;
     print(error)
-    if( error<10^-8 ){
+    if( error<10^-6 ){
       vari = (solve(I)%*%var(U)%*%t(solve(I)))*length(units)		
       break;
     }
@@ -120,7 +120,7 @@ get_proposed_EM <- function(X=raw.X, Y=raw.Y, a=raw.a, WEIGHT=rep(1,length(raw.Y
     zeta = trans(WEIGHT*(Y-old[1]-X%*%old[2:(len-2)]), units= units)^2 - trans((WEIGHT^2-1), units= units)*old[len]
 
     U.1 = trans( (WEIGHT*(Y-old[1]-X%*%old[2:(len-2)])-const_a*a.hat), units=units) - trans((WEIGHT-1)*a.hat, units= units)/units
-    U.2 = trans( X*as.vector(WEIGHT*(Y-old[1]-X%*%old[2:(len-2)])-const_a*a.hat),units= units) - trans( X*(WEIGHT-1)*a.hat, units= units)/units
+    U.2 = trans_mat( X*as.vector(WEIGHT*(Y-old[1]-X%*%old[2:(len-2)])-const_a*a.hat),units= units) - trans( X*(WEIGHT-1)*a.hat, units= units)/units
     U.3 = old[len]*short_const_a+(short_const_a^2)*zeta - old[(len-1)]
     U.4 = trans(WEIGHT*(Y-old[1]-X%*%old[2:(len-2)])^2, units= units) + units*old[len]*short_const_a - (units + 2*old[len]/old[(len-1)])*(short_const_a^2)*zeta - units*old[len]
     
@@ -131,7 +131,7 @@ get_proposed_EM <- function(X=raw.X, Y=raw.Y, a=raw.a, WEIGHT=rep(1,length(raw.Y
     I[1,(len-1)] = sum( (trans(WEIGHT*(Y-old[1]-X%*%old[2:(len-2)]), units= units))*(-units*old[len]/((old[len]+units*old[(len-1)])^2)) )
     I[1,len] = sum( (trans(WEIGHT*(Y-old[1]-X*old[2]), units= units))*units*(short_const_a^2)/old[(len-1)] )
 
-    I[2:(len-2),1] = colSums(trans(X, units= units)*(units*short_const_a-1))
+    I[2:(len-2),1] = colSums(trans_mat(X, units= units)*(units*short_const_a-1))
     I[2:(len-2),2:(len-2)] = t(X)%*%(const_a*trans_mat(WEIGHT*X, units= units, islong=TRUE)-(WEIGHT*X))  + t(X)%*%((WEIGHT-1)*trans_mat(WEIGHT*X, units= units, islong=TRUE)/long_unit)  
     I[2:(len-2),(len-1)] = colSums((trans(WEIGHT*(Y-old[1]-X%*%old[2:(len-2)]), units= units))*(trans_mat(X, units= units))*(-old[len]/((old[len]+units*old[(len-1)])^2)) );
     I[2:(len-2),len] = colSums((trans(WEIGHT*(Y-old[1]-X%*%old[2:(len-2)]), units= units))*(trans_mat(X, units= units))*((short_const_a^2)/old[(len-1)]) );
@@ -151,8 +151,8 @@ get_proposed_EM <- function(X=raw.X, Y=raw.Y, a=raw.a, WEIGHT=rep(1,length(raw.Y
     new = old - solve(I)%*%colSums(U);
     error=sum((new-old)^2); old=new;
     print(error)
-    if( error<10^-8 ){
-      vari = (solve(I)%*%var(U)%*%t(solve(I)))*cluster    
+    if( error<10^-6 ){
+      vari = (solve(I)%*%var(U)%*%t(solve(I)))*length(units)   
       break;
     }
   }
